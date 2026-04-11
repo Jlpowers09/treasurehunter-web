@@ -125,18 +125,33 @@ export default function PostScreen() {
 
   const selectedType = SALE_TYPES.find(t => t.type === saleType);
 
-  const handleSubmit = () => {
-    if (!title || !saleType || !address || !city || !state || !zip || !startDate || !endDate) {
-      Alert.alert('Missing fields', 'Please fill in all required fields.');
-      return;
-    }
-    createSale.mutate({
-      title, description, type: saleType as any,
-      address, city, state, zip,
-      lat: 0, lng: 0,
-      startDate, endDate, startTime, endTime,
-    });
-  };
+  const handleSubmit = async () => {
+  if (!title || !saleType || !address || !city || !state || !zip || !startDate || !endDate) {
+    Alert.alert('Missing fields', 'Please fill in all required fields.');
+    return;
+  }
+
+  // Geocode the address to get real lat/lng
+  let lat = 0, lng = 0;
+  try {
+    const fullAddress = encodeURIComponent(`${address}, ${city}, ${state} ${zip}`);
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/places/geocode?address=${fullAddress}`
+    );
+    const data = await res.json();
+    lat = data.lat ?? 0;
+    lng = data.lng ?? 0;
+  } catch (e) {
+    console.warn('Geocode failed, using 0,0');
+  }
+
+  createSale.mutate({
+    title, description, type: saleType as any,
+    address, city, state, zip,
+    lat, lng,
+    startDate, endDate, startTime, endTime,
+  });
+};
 
   const resetForm = () => {
     setSuccess(false); setStep(1); setSaleType(''); setTitle('');

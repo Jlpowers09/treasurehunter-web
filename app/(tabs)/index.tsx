@@ -1,8 +1,8 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator, TextInput, Platform
+  ActivityIndicator, TextInput, Platform, Modal
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { trpc } from '../../lib/trpc';
 
@@ -17,10 +17,18 @@ const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: stri
   { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#F97316' },
 ];
 
+const GOOGLE_MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? '';
+
 export default function MapScreen() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const googleMapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+
   const { data: sales, isLoading, refetch } = trpc.sale.list.useQuery({});
 
   const filtered = sales?.filter((s: any) =>
@@ -33,8 +41,88 @@ export default function MapScreen() {
   const getCategoryCount = (type: string) =>
     sales?.filter((s: any) => s.type === type).length ?? 0;
 
+  // Load Google Maps
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !GOOGLE_MAPS_KEY) return;
+    
+    const loadMap = async () => {
+      try {
+        // Load Google Maps script directly
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places`;
+        script.async = true;
+        script.onload = () => setMapLoaded(true);
+        script.onerror = (e) => console.error('Maps script error:', e);
+        document.head.appendChild(script);
+      } catch (e) {
+        console.error('Maps load error:', e);
+      }
+    };
+    loadMap();
+  }, []);
+
+  // Initialize map when loaded
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+    
+    const google = (window as any).google;
+    const map = new google.maps.Map(mapRef.current, {
+      center: { lat: 38.5816, lng: -121.4944 }, // Sacramento default
+      zoom: 11,
+      styles: [
+        { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+      ],
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+    googleMapRef.current = map;
+
+    // Try to get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      });
+    }
+  }, [mapLoaded]);
+
+  // Add markers when sales load
+  useEffect(() => {
+    if (!googleMapRef.current || !filtered) return;
+    const google = (window as any).google;
+    if (!google) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+
+    filtered.forEach((sale: any) => {
+      if (sale.lat == null || sale.lng == null) return;
+      const cat = CATEGORIES.find(c => c.type === sale.type);
+      
+      const marker = new google.maps.Marker({
+        position: { lat: sale.lat, lng: sale.lng },
+        map: googleMapRef.current,
+        title: sale.title,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: cat?.color ?? '#FF385C',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+          scale: 10,
+        },
+      });
+
+      marker.addListener('click', () => setSelectedSale(sale));
+      markersRef.current.push(marker);
+    });
+  }, [filtered, mapLoaded]);
+
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.appName}>TreasureHunter</Text>
@@ -45,6 +133,7 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Ionicons name="search-outline" size={18} color="#999" />
@@ -63,6 +152,7 @@ export default function MapScreen() {
         </View>
       </View>
 
+      {/* Categories */}
       <View style={styles.categoriesWrapper}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
           {CATEGORIES.map(cat => {
@@ -90,44 +180,42 @@ export default function MapScreen() {
         </ScrollView>
       </View>
 
+      {/* Map */}
       <View style={styles.mapArea}>
-        <View style={styles.mapPlaceholder}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <View key={`h${i}`} style={[styles.gridLineH, { top: `${i * 14}%` as any }]} />
-          ))}
-          {Array.from({ length: 6 }).map((_, i) => (
-            <View key={`v${i}`} style={[styles.gridLineV, { left: `${i * 20}%` as any }]} />
-          ))}
-          {filtered?.slice(0, 6).map((sale: any, i: number) => {
-            const cat = CATEGORIES.find(c => c.type === sale.type);
-            return (
-              <TouchableOpacity
-                key={sale.id}
-                style={[styles.mapPin, {
-                  backgroundColor: cat?.color ?? '#FF385C',
-                  top: `${15 + (i * 30) % 55}%` as any,
-                  left: `${10 + (i * 35) % 75}%` as any,
-                }]}
-                activeOpacity={0.8}
-              >
-                <Ionicons name={cat?.icon ?? 'location-outline'} size={12} color="#fff" />
-                <Text style={styles.mapPinText} numberOfLines={1}>{sale.city}</Text>
-              </TouchableOpacity>
-            );
-          })}
-          <View style={styles.mapControls}>
-            <TouchableOpacity style={styles.mapControlBtn} onPress={() => refetch()}>
-              <Ionicons name="locate-outline" size={20} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mapControlBtn}>
-              <Ionicons name="add-outline" size={20} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mapControlBtn}>
-              <Ionicons name="remove-outline" size={20} color="#333" />
-            </TouchableOpacity>
+        {Platform.OS === 'web' ? (
+          <div
+            ref={mapRef as any}
+            style={{ width: '100%', height: '100%', backgroundColor: '#e8ede8' }}
+          />
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <Ionicons name="map-outline" size={48} color="#ccc" />
+            <Text style={styles.mapPlaceholderText}>Map available on web</Text>
           </View>
+        )}
+
+        {!mapLoaded && Platform.OS === 'web' && (
+          <View style={styles.mapLoading}>
+            <ActivityIndicator color="#FF385C" />
+            <Text style={styles.mapLoadingText}>Loading map...</Text>
+          </View>
+        )}
+
+        {/* Map controls */}
+        <View style={styles.mapControls}>
+          <TouchableOpacity style={styles.mapControlBtn} onPress={() => {
+            if (navigator.geolocation && googleMapRef.current) {
+              navigator.geolocation.getCurrentPosition(pos => {
+                googleMapRef.current.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                googleMapRef.current.setZoom(13);
+              });
+            }
+          }}>
+            <Ionicons name="locate-outline" size={20} color="#333" />
+          </TouchableOpacity>
         </View>
 
+        {/* Results bar */}
         <TouchableOpacity style={styles.resultsBar} onPress={() => setDrawerOpen(prev => !prev)} activeOpacity={0.7}>
           <View style={styles.resultsLeft}>
             <View style={styles.drawerHandle} />
@@ -139,6 +227,7 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Drawer */}
       {drawerOpen && (
         <View style={styles.drawer}>
           {isLoading ? (
@@ -158,7 +247,12 @@ export default function MapScreen() {
               {filtered?.map((sale: any) => {
                 const cat = CATEGORIES.find(c => c.type === sale.type);
                 return (
-                  <TouchableOpacity key={sale.id} style={styles.saleRow} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    key={sale.id}
+                    style={styles.saleRow}
+                    onPress={() => setSelectedSale(sale)}
+                    activeOpacity={0.7}
+                  >
                     <View style={[styles.saleIconBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
                       <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#FF385C'} />
                     </View>
@@ -175,13 +269,7 @@ export default function MapScreen() {
                         </View>
                       </View>
                     </View>
-                    <View style={styles.saleRowRight}>
-                      <View style={styles.saleStats}>
-                        <Ionicons name="heart-outline" size={13} color="#bbb" />
-                        <Text style={styles.statNum}>{sale._count?.favorites ?? 0}</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color="#ddd" />
-                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#ddd" />
                   </TouchableOpacity>
                 );
               })}
@@ -189,6 +277,72 @@ export default function MapScreen() {
           )}
         </View>
       )}
+
+      {/* Sale Detail Modal */}
+      <Modal visible={!!selectedSale} animationType="slide" transparent onRequestClose={() => setSelectedSale(null)}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={styles.modalBackdrop} onPress={() => setSelectedSale(null)} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            {selectedSale && (() => {
+              const cat = CATEGORIES.find(c => c.type === selectedSale.type);
+              return (
+                <>
+                  <View style={styles.modalHeader}>
+                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
+                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#FF385C'} />
+                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setSelectedSale(null)} style={styles.modalCloseBtn}>
+                      <Ionicons name="close" size={20} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.modalTitle}>{selectedSale.title}</Text>
+
+                  {selectedSale.description && (
+                    <Text style={styles.modalDescription}>{selectedSale.description}</Text>
+                  )}
+
+                  <View style={styles.modalInfoRow}>
+                    <Ionicons name="location-outline" size={16} color="#FF385C" />
+                    <Text style={styles.modalInfoText}>{selectedSale.address}, {selectedSale.city}, {selectedSale.state} {selectedSale.zip}</Text>
+                  </View>
+
+                  <View style={styles.modalInfoRow}>
+                    <Ionicons name="calendar-outline" size={16} color="#FF385C" />
+                    <Text style={styles.modalInfoText}>
+                      {new Date(selectedSale.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
+                      {' — '}
+                      {new Date(selectedSale.endDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
+                    </Text>
+                  </View>
+
+                  {selectedSale.startTime && (
+                    <View style={styles.modalInfoRow}>
+                      <Ionicons name="time-outline" size={16} color="#FF385C" />
+                      <Text style={styles.modalInfoText}>{selectedSale.startTime} — {selectedSale.endTime}</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity style={styles.modalDirectionsBtn} onPress={() => {
+                      const addr = encodeURIComponent(`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.state}`);
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
+                    }}>
+                      <Ionicons name="navigate-outline" size={18} color="#fff" />
+                      <Text style={styles.modalDirectionsText}>Get Directions</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.modalSaveBtn}>
+                      <Ionicons name="heart-outline" size={18} color="#FF385C" />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -217,19 +371,14 @@ const styles = StyleSheet.create({
   categoryLabel: { fontSize: 10, fontWeight: '600', color: '#666', textAlign: 'center' },
   countBadge: { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1 },
   countText: { fontSize: 10, fontWeight: '700' },
-  mapArea: { flex: 1 },
-  mapPlaceholder: { flex: 1, backgroundColor: '#eef2ee', position: 'relative', overflow: 'hidden' },
-  gridLineH: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: 'rgba(255,255,255,0.5)' },
-  gridLineV: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: 'rgba(255,255,255,0.5)' },
-  mapPin: {
-    position: 'absolute', flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 8, paddingVertical: 5, borderRadius: 16, gap: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4,
-  },
-  mapPinText: { fontSize: 10, color: '#fff', fontWeight: '700', maxWidth: 70 },
-  mapControls: { position: 'absolute', right: 12, top: 12, gap: 8 },
+  mapArea: { flex: 1, position: 'relative' },
+  mapPlaceholder: { flex: 1, backgroundColor: '#eef2ee', alignItems: 'center', justifyContent: 'center' },
+  mapPlaceholderText: { fontSize: 14, color: '#999', marginTop: 8 },
+  mapLoading: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
+  mapLoadingText: { fontSize: 13, color: '#999', marginTop: 8 },
+  mapControls: { position: 'absolute', right: 12, top: 12 },
   mapControlBtn: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: '#fff',
+    width: 40, height: 40, borderRadius: 10, backgroundColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
@@ -256,7 +405,32 @@ const styles = StyleSheet.create({
   saleRowDate: { fontSize: 11, color: '#bbb' },
   typePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   typePillText: { fontSize: 10, fontWeight: '700' },
-  saleRowRight: { alignItems: 'center', gap: 4 },
-  saleStats: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  statNum: { fontSize: 11, color: '#bbb' },
+
+  // Modal
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, paddingBottom: 40,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 16,
+  },
+  modalHandle: { width: 40, height: 4, backgroundColor: '#e0e0e0', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  modalTypeBox: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  modalTypeText: { fontSize: 12, fontWeight: '700' },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#111', marginBottom: 8 },
+  modalDescription: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 12 },
+  modalInfoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  modalInfoText: { fontSize: 14, color: '#444', flex: 1, lineHeight: 20 },
+  modalActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  modalDirectionsBtn: {
+    flex: 1, backgroundColor: '#FF385C', borderRadius: 14, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+  },
+  modalDirectionsText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  modalSaveBtn: {
+    width: 52, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e0e0',
+    alignItems: 'center', justifyContent: 'center',
+  },
 });
