@@ -1,0 +1,9 @@
+input:focus, select:focus {
+  outline: 2px solid #FF385C !important;
+  outline-offset: 0px;
+  border-color: #FF385C !important;
+}
+input[type="date"], input[type="time"], select {
+  -webkit-appearance: none;
+  appearance: none;
+}
