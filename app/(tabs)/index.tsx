@@ -19,6 +19,47 @@ const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: stri
 
 const GOOGLE_MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? '';
 
+
+function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; currentCount: number; avgRating?: number }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+
+  const utils = trpc.useUtils();
+  const createReview = trpc.review.create.useMutation({
+    onSuccess: () => {
+      setSubmitted(true);
+      utils.sale.list.invalidate();
+    },
+  });
+
+  const handleRate = (rating: number) => {
+    if (submitted) return;
+    setUserRating(rating);
+    createReview.mutate({ saleId, rating, comment: '' });
+  };
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 3 }}>
+        {[1,2,3,4,5].map(star => (
+          <TouchableOpacity key={star} onPress={() => handleRate(star)} activeOpacity={0.7} disabled={submitted}>
+            <Ionicons
+              name={(userRating || hovered) >= star ? 'star' : avgRating >= star ? 'star' : avgRating >= star - 0.5 ? 'star-half' : 'star-outline'}
+              size={20}
+              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#F59E0B' : '#ddd'}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+      {submitted
+        ? <Text style={{ fontSize: 12, color: '#10B981', fontWeight: '700' }}>Thanks!</Text>
+        : <Text style={{ fontSize: 12, color: '#999' }}>{currentCount > 0 ? `${avgRating} · ${currentCount} review${currentCount !== 1 ? 's' : ''}` : 'Tap to rate'}</Text>
+      }
+    </View>
+  );
+}
+
 export default function MapScreen() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -367,6 +408,19 @@ export default function MapScreen() {
                           <Text style={[styles.typePillText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
                         </View>
                       </View>
+                      {(sale._count?.reviews ?? 0) > 0 && (
+                        <View style={styles.saleRowStars}>
+                          {[1,2,3,4,5].map((star: number) => (
+                            <Ionicons
+                              key={star}
+                              name="star"
+                              size={10}
+                              color={star <= Math.round((sale.avgRating ?? 0)) ? '#F59E0B' : '#e0e0e0'}
+                            />
+                          ))}
+                          <Text style={styles.saleRowReviewCount}>({sale._count.reviews})</Text>
+                        </View>
+                      )}
                     </View>
                     <Ionicons name="chevron-forward" size={16} color="#ddd" />
                   </TouchableOpacity>
@@ -424,6 +478,11 @@ export default function MapScreen() {
                     </View>
                   )}
 
+                  <StarRating
+                    saleId={selectedSale.id}
+                    currentCount={selectedSale._count?.reviews ?? 0}
+                    avgRating={selectedSale.avgRating ?? 0}
+                  />
                   <View style={styles.modalActions}>
                     <TouchableOpacity style={styles.modalDirectionsBtn} onPress={() => {
                       const addr = encodeURIComponent(`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.state}`);
@@ -502,6 +561,8 @@ const styles = StyleSheet.create({
   saleRowSub: { fontSize: 12, color: '#999', marginTop: 2 },
   saleRowMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   saleRowDate: { fontSize: 11, color: '#bbb' },
+  saleRowStars: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
+  saleRowReviewCount: { fontSize: 10, color: '#bbb', marginLeft: 2 },
   typePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   typePillText: { fontSize: 10, fontWeight: '700' },
 

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { trpc } from '../../lib/trpc';
@@ -14,13 +14,17 @@ const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: stri
   { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#F97316' },
 ];
 
-function StarRating({ saleId, currentCount }: { saleId: string; currentCount: number }) {
+function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; currentCount: number; avgRating?: number }) {
   const [hovered, setHovered] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [userRating, setUserRating] = useState(0);
 
+  const utils = trpc.useUtils();
   const createReview = trpc.review.create.useMutation({
-    onSuccess: () => { setSubmitted(true); },
+    onSuccess: () => {
+      setSubmitted(true);
+      utils.sale.list.invalidate();
+    },
     onError: (e: any) => Alert.alert('Error', e.message),
   });
 
@@ -41,9 +45,9 @@ function StarRating({ saleId, currentCount }: { saleId: string; currentCount: nu
             disabled={submitted}
           >
             <Ionicons
-              name={(hovered || userRating) >= star ? 'star' : 'star-outline'}
+              name={(userRating || hovered) >= star ? 'star' : avgRating >= star ? 'star' : avgRating >= star - 0.5 ? 'star-half' : 'star-outline'}
               size={18}
-              color={(hovered || userRating) >= star ? '#F59E0B' : '#ddd'}
+              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#F59E0B' : '#ddd'}
             />
           </TouchableOpacity>
         ))}
@@ -51,8 +55,9 @@ function StarRating({ saleId, currentCount }: { saleId: string; currentCount: nu
       {submitted ? (
         <Text style={starStyles.thanks}>Thanks!</Text>
       ) : (
-        <Text style={starStyles.count}>{currentCount > 0 ? `${currentCount} review${currentCount !== 1 ? 's' : ''}` : 'Be first to rate'}</Text>
+        <Text style={starStyles.count}>{currentCount > 0 ? `${avgRating} · ${currentCount} review${currentCount !== 1 ? 's' : ''}` : 'Be first to rate'}</Text>
       )}
+
     </View>
   );
 }
@@ -65,6 +70,7 @@ const starStyles = StyleSheet.create({
 });
 
 export default function ListScreen() {
+  const [selectedSale, setSelectedSale] = useState<any>(null);
   const { data: sales, isLoading, refetch } = trpc.sale.list.useQuery({});
 
   if (isLoading) {
@@ -93,7 +99,7 @@ export default function ListScreen() {
         renderItem={({ item }) => {
           const cat = CATEGORIES.find(c => c.type === item.type);
           return (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => setSelectedSale(item)}>
               <View style={[styles.typeBar, { backgroundColor: cat?.color ?? '#FF385C' }]} />
               <View style={styles.cardContent}>
                 <View style={styles.cardTop}>
@@ -120,12 +126,71 @@ export default function ListScreen() {
                     <Text style={styles.statText}>{item._count?.favorites ?? 0}</Text>
                   </View>
                 </View>
-                <StarRating saleId={item.id} currentCount={item._count?.reviews ?? 0} />
+                <StarRating saleId={item.id} currentCount={item._count?.reviews ?? 0} avgRating={item.avgRating ?? 0} />
               </View>
             </TouchableOpacity>
           );
         }}
       />
+
+
+      {/* Sale Detail Modal */}
+      <Modal visible={!!selectedSale} animationType="slide" transparent onRequestClose={() => setSelectedSale(null)}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={styles.modalBackdrop} onPress={() => setSelectedSale(null)} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            {selectedSale && (() => {
+              const cat = CATEGORIES.find(c => c.type === selectedSale.type);
+              return (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <View style={styles.modalHeader}>
+                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
+                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={18} color={cat?.color ?? '#FF385C'} />
+                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setSelectedSale(null)} style={styles.modalCloseBtn}>
+                      <Ionicons name="close" size={20} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.modalTitle}>{selectedSale.title}</Text>
+                  {selectedSale.description ? <Text style={styles.modalDesc}>{selectedSale.description}</Text> : null}
+                  <View style={styles.modalRow}>
+                    <Ionicons name="location-outline" size={15} color="#FF385C" />
+                    <Text style={styles.modalRowText}>{selectedSale.address}, {selectedSale.city}, {selectedSale.state} {selectedSale.zip}</Text>
+                  </View>
+                  <View style={styles.modalRow}>
+                    <Ionicons name="calendar-outline" size={15} color="#FF385C" />
+                    <Text style={styles.modalRowText}>
+                      {new Date(selectedSale.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
+                      {' — '}
+                      {new Date(selectedSale.endDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
+                    </Text>
+                  </View>
+                  {selectedSale.startTime && (
+                    <View style={styles.modalRow}>
+                      <Ionicons name="time-outline" size={15} color="#FF385C" />
+                      <Text style={styles.modalRowText}>{selectedSale.startTime} — {selectedSale.endTime}</Text>
+                    </View>
+                  )}
+                  <StarRating
+                    saleId={selectedSale.id}
+                    currentCount={selectedSale._count?.reviews ?? 0}
+                    avgRating={selectedSale.avgRating ?? 0}
+                  />
+                  <TouchableOpacity style={styles.directionsBtn} onPress={() => {
+                    const addr = encodeURIComponent(`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.state}`);
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
+                  }}>
+                    <Ionicons name="navigate-outline" size={18} color="#fff" />
+                    <Text style={styles.directionsBtnText}>Get Directions</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -158,6 +223,20 @@ const styles = StyleSheet.create({
   cardStats: { flexDirection: 'row', gap: 12 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText: { fontSize: 12, color: '#bbb' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40, maxHeight: '85%' },
+  modalHandle: { width: 40, height: 4, backgroundColor: '#e0e0e0', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  modalTypeBox: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  modalTypeText: { fontSize: 12, fontWeight: '700' },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#111', marginBottom: 8 },
+  modalDesc: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 12 },
+  modalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  modalRowText: { fontSize: 14, color: '#444', flex: 1, lineHeight: 20 },
+  directionsBtn: { backgroundColor: '#FF385C', borderRadius: 14, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  directionsBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   empty: { alignItems: 'center', paddingTop: 80 },
   emptyText: { fontSize: 18, fontWeight: '700', color: '#999', marginTop: 16 },
   emptySub: { fontSize: 14, color: '#bbb', marginTop: 4 },
