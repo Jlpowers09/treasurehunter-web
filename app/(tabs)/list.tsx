@@ -199,11 +199,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f8f8' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
-    paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 52,
+    paddingHorizontal: 20, paddingTop: Platform.OS === 'web' ? 16 : 52,
     paddingBottom: 16, backgroundColor: '#fff',
     borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
   },
-  title: { fontSize: 24, fontWeight: '800', color: '#333' },
+  title: { fontSize: 20, fontWeight: '800', color: '#111', letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: '#999', marginTop: 2 },
   list: { padding: 16, gap: 12 },
   card: {
