@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { trpc } from '../../lib/trpc';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -71,7 +71,32 @@ const starStyles = StyleSheet.create({
 
 export default function ListScreen() {
   const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [radiusMiles, setRadiusMiles] = useState(10);
+  const [showRadiusSlider, setShowRadiusSlider] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const { data: sales, isLoading, refetch } = trpc.sale.list.useQuery({});
+  useEffect(() => {
+    if (navigator?.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
+  }, []);
+  const distanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 3958.8;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+  const filtered = sales?.filter((s: any) => {
+    if (userLocation) {
+      const dist = distanceMiles(userLocation.lat, userLocation.lng, s.lat, s.lng);
+      if (dist > radiusMiles) return false;
+    }
+    return true;
+  });
 
   if (isLoading) {
     return <View style={styles.centered}><ActivityIndicator size="large" color="#FF385C" /></View>;
@@ -80,11 +105,32 @@ export default function ListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Nearby Sales</Text>
-        <Text style={styles.subtitle}>{sales?.length ?? 0} found</Text>
+        <View>
+          <Text style={styles.title}>Nearby Sales</Text>
+          <Text style={styles.subtitle}>{filtered?.length ?? 0} found</Text>
+        </View>
+        <TouchableOpacity onPress={() => setShowRadiusSlider(p => !p)} style={styles.radiusBtn}>
+          <Ionicons name="radio-outline" size={18} color={showRadiusSlider ? '#FF385C' : '#555'} />
+          <Text style={[styles.radiusBtnText, showRadiusSlider && { color: '#FF385C' }]}>{radiusMiles} mi</Text>
+        </TouchableOpacity>
       </View>
+      {showRadiusSlider && (
+        <View style={styles.radiusPanel}>
+          <View style={styles.sliderTrack}>
+            {[5, 10, 15, 25, 50].map(val => (
+              <TouchableOpacity
+                key={val}
+                style={[styles.sliderTick, radiusMiles === val && styles.sliderTickActive]}
+                onPress={() => setRadiusMiles(val)}
+              >
+                <Text style={[styles.sliderTickText, radiusMiles === val && styles.sliderTickTextActive]}>{val}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
       <FlatList
-        data={sales}
+        data={filtered}
         keyExtractor={item => item.id}
         onRefresh={refetch}
         refreshing={isLoading}
@@ -204,6 +250,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
   },
   title: { fontSize: 20, fontWeight: '800', color: '#111', letterSpacing: -0.5 },
+  radiusBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f5f5f5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  radiusBtnText: { fontSize: 13, fontWeight: '700', color: '#555' },
+  radiusPanel: { backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  sliderTrack: { flexDirection: 'row', justifyContent: 'space-between' },
+  sliderTick: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
+  sliderTickActive: { backgroundColor: '#FF385C' },
+  sliderTickText: { fontSize: 13, fontWeight: '600', color: '#aaa' },
+  sliderTickTextActive: { color: '#fff' },
   subtitle: { fontSize: 14, color: '#999', marginTop: 2 },
   list: { padding: 16, gap: 12 },
   card: {
