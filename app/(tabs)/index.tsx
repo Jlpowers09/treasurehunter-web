@@ -1,6 +1,6 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator, TextInput, Platform, Modal
+  ActivityIndicator, TextInput, Platform, Modal, Image
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -69,7 +69,7 @@ function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; c
 export default function MapScreen() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
@@ -243,8 +243,7 @@ export default function MapScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.appName}>TreasureHunter</Text>
-          <Text style={styles.tagline}>Find hidden gems near you</Text>
+          <Image source={require('../../assets/images/logo.png')} style={{ width: 220, height: 64, resizeMode: 'contain', marginLeft: -12 }} />
         </View>
         <TouchableOpacity style={styles.notifBtn}>
           <Ionicons name="notifications-outline" size={22} color="#222" />
@@ -300,7 +299,7 @@ export default function MapScreen() {
                 <View style={{ height: 4, backgroundColor: cat.color, width: '100%' }} />
                 <View style={styles.categoryBottom}>
                   <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
-                    {cat.label}
+                    {cat.label} Sales
                   </Text>
                   <View style={[styles.countBadge, { backgroundColor: isSelected ? cat.color : '#f0f0f0' }]}>
                     <Text style={[styles.countText, { color: isSelected ? '#fff' : '#999' }]}>{count}</Text>
