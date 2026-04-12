@@ -286,7 +286,7 @@ export default function MapScreen() {
                 {Platform.OS === 'web' ? (
                   <img
                     src={cat.image}
-                    style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 10 }}
+                    style={{ width: '100%', height: 64, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
                     alt={cat.label}
                   />
                 ) : (
@@ -297,6 +297,7 @@ export default function MapScreen() {
                 {isSelected && (
                   <View style={[styles.categorySelectedOverlay, { borderColor: cat.color }]} />
                 )}
+                <View style={{ height: 4, backgroundColor: cat.color, width: '100%' }} />
                 <View style={styles.categoryBottom}>
                   <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
                     {cat.label}
