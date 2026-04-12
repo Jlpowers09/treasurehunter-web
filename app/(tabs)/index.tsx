@@ -25,21 +25,36 @@ export default function MapScreen() {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [radiusMiles, setRadiusMiles] = useState(10);
+  const [showRadiusSlider, setShowRadiusSlider] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
 
   const { data: sales, isLoading, refetch } = trpc.sale.list.useQuery({});
 
-  const filtered = sales?.filter((s: any) =>
-    (!selectedType || s.type === selectedType) &&
-    (!searchText ||
-      s.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.city.toLowerCase().includes(searchText.toLowerCase()))
-  );
+  const distanceMiles = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 3958.8;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+
+  const filtered = sales?.filter((s: any) => {
+    if (selectedType && s.type !== selectedType) return false;
+    if (searchText && !s.title.toLowerCase().includes(searchText.toLowerCase()) &&
+        !s.city.toLowerCase().includes(searchText.toLowerCase())) return false;
+    if (userLocation) {
+      const dist = distanceMiles(userLocation.lat, userLocation.lng, s.lat, s.lng);
+      if (dist > radiusMiles) return false;
+    }
+    return true;
+  });
 
   const getCategoryCount = (type: string) =>
-    sales?.filter((s: any) => s.type === type).length ?? 0;
+    filtered?.filter((s: any) => s.type === type).length ?? 0;
 
   // Load Google Maps
   useEffect(() => {
@@ -74,16 +89,72 @@ export default function MapScreen() {
         { featureType: 'transit', stylers: [{ visibility: 'off' }] },
       ],
       mapTypeControl: false,
+      myLocationButton: false,
       streetViewControl: false,
       fullscreenControl: false,
     });
     googleMapRef.current = map;
 
-    // Try to get user location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    let userDot: any = null;
+    const placeUserDot = (lat: number, lng: number) => {
+      const google = (window as any).google;
+      if (userDot) userDot.setMap(null);
+
+      // Inject pulse keyframe CSS once
+      if (!document.getElementById('pulse-style')) {
+        const style = document.createElement('style');
+        style.id = 'pulse-style';
+        style.innerHTML = [
+          '@keyframes pulse-ring {',
+          '  0% { transform: scale(0.5); opacity: 1; }',
+          '  100% { transform: scale(2.5); opacity: 0; }',
+          '}',
+          '.user-dot-wrapper { position: relative; width: 24px; height: 24px; }',
+          '.user-dot-pulse {',
+          '  position: absolute; top: 0; left: 0;',
+          '  width: 24px; height: 24px; border-radius: 50%;',
+          '  background: rgba(66, 133, 244, 0.4);',
+          '  animation: pulse-ring 1.8s ease-out infinite;',
+          '}',
+          '.user-dot-core {',
+          '  position: absolute; top: 4px; left: 4px;',
+          '  width: 16px; height: 16px; border-radius: 50%;',
+          '  background: #4285F4;',
+          '  border: 3px solid #fff;',
+          '  box-shadow: 0 2px 6px rgba(0,0,0,0.3);',
+          '}',
+        ].join(' ');
+        document.head.appendChild(style);
+      }
+
+      userDot = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        zIndex: 999,
+        title: 'You are here',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent([
+            '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">',
+            '  <circle cx="18" cy="18" r="16" fill="rgba(66,133,244,0.2)" stroke="rgba(66,133,244,0.4)" stroke-width="1"/>',
+            '  <circle cx="18" cy="18" r="9" fill="#4285F4" stroke="#ffffff" stroke-width="3"/>',
+            '</svg>',
+          ].join('')),
+          scaledSize: new google.maps.Size(36, 36),
+          anchor: new google.maps.Point(18, 18),
+        },
       });
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          map.setCenter(loc);
+          setUserLocation(loc);
+          placeUserDot(loc.lat, loc.lng);
+        },
+        err => console.warn('Geolocation error:', err.message)
+      );
     }
   }, [mapLoaded]);
 
@@ -200,14 +271,42 @@ export default function MapScreen() {
             <Text style={styles.mapLoadingText}>Loading map...</Text>
           </View>
         )}
-
+        {/* Radius slider panel */}
+        {showRadiusSlider && (
+          <View style={styles.radiusPanel}>
+            <View style={styles.radiusRow}>
+              <Ionicons name="radio-outline" size={16} color="#FF385C" />
+              <Text style={styles.radiusLabel}>Radius: <Text style={styles.radiusValue}>{radiusMiles} mi</Text></Text>
+              <TouchableOpacity onPress={() => setShowRadiusSlider(false)}>
+                <Ionicons name="close" size={16} color="#999" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sliderTrack}>
+              {[5, 10, 15, 25, 50].map(val => (
+                <TouchableOpacity
+                  key={val}
+                  style={[styles.sliderTick, radiusMiles === val && styles.sliderTickActive]}
+                  onPress={() => setRadiusMiles(val)}
+                >
+                  <Text style={[styles.sliderTickText, radiusMiles === val && styles.sliderTickTextActive]}>{val}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
         {/* Map controls */}
         <View style={styles.mapControls}>
+          <TouchableOpacity style={styles.mapControlBtn} onPress={() => setShowRadiusSlider(p => !p)}>
+            <Ionicons name="radio-outline" size={20} color={showRadiusSlider ? '#FF385C' : '#333'} />
+          </TouchableOpacity>
+          <View style={{ height: 8 }} />
           <TouchableOpacity style={styles.mapControlBtn} onPress={() => {
             if (navigator.geolocation && googleMapRef.current) {
               navigator.geolocation.getCurrentPosition(pos => {
-                googleMapRef.current.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                googleMapRef.current.setCenter(loc);
                 googleMapRef.current.setZoom(13);
+                setUserLocation(loc);
               });
             }
           }}>
@@ -429,6 +528,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   modalDirectionsText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  radiusPanel: {
+    position: 'absolute', left: 12, right: 60, top: 12,
+    backgroundColor: '#fff', borderRadius: 14, padding: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+  },
+  radiusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  radiusLabel: { flex: 1, fontSize: 13, color: '#555', fontWeight: '600' },
+  radiusValue: { color: '#FF385C', fontWeight: '800' },
+  sliderTrack: { flexDirection: 'row', justifyContent: 'space-between' },
+  sliderTick: {
+    flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8,
+    backgroundColor: '#f5f5f5', marginHorizontal: 3,
+  },
+  sliderTickActive: { backgroundColor: '#FF385C' },
+  sliderTickText: { fontSize: 12, fontWeight: '700', color: '#999' },
+  sliderTickTextActive: { color: '#fff' },
   modalSaveBtn: {
     width: 52, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e0e0',
     alignItems: 'center', justifyContent: 'center',

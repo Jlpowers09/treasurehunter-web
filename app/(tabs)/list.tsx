@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { trpc } from '../../lib/trpc';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -12,6 +13,56 @@ const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: stri
   { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#10B981' },
   { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#F97316' },
 ];
+
+function StarRating({ saleId, currentCount }: { saleId: string; currentCount: number }) {
+  const [hovered, setHovered] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+
+  const createReview = trpc.review.create.useMutation({
+    onSuccess: () => { setSubmitted(true); },
+    onError: (e: any) => Alert.alert('Error', e.message),
+  });
+
+  const handleRate = (rating: number) => {
+    if (submitted) return;
+    setUserRating(rating);
+    createReview.mutate({ saleId, rating, comment: '' });
+  };
+
+  return (
+    <View style={starStyles.container}>
+      <View style={starStyles.stars}>
+        {[1,2,3,4,5].map(star => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => handleRate(star)}
+            activeOpacity={0.7}
+            disabled={submitted}
+          >
+            <Ionicons
+              name={(hovered || userRating) >= star ? 'star' : 'star-outline'}
+              size={18}
+              color={(hovered || userRating) >= star ? '#F59E0B' : '#ddd'}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+      {submitted ? (
+        <Text style={starStyles.thanks}>Thanks!</Text>
+      ) : (
+        <Text style={starStyles.count}>{currentCount > 0 ? `${currentCount} review${currentCount !== 1 ? 's' : ''}` : 'Be first to rate'}</Text>
+      )}
+    </View>
+  );
+}
+
+const starStyles = StyleSheet.create({
+  container: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  stars: { flexDirection: 'row', gap: 2 },
+  count: { fontSize: 11, color: '#bbb' },
+  thanks: { fontSize: 11, color: '#10B981', fontWeight: '700' },
+});
 
 export default function ListScreen() {
   const { data: sales, isLoading, refetch } = trpc.sale.list.useQuery({});
@@ -65,14 +116,11 @@ export default function ListScreen() {
                     <Text style={styles.statText}>{item.viewCount}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Ionicons name="star-outline" size={14} color="#bbb" />
-                    <Text style={styles.statText}>{item._count?.reviews ?? 0}</Text>
-                  </View>
-                  <View style={styles.stat}>
                     <Ionicons name="heart-outline" size={14} color="#bbb" />
                     <Text style={styles.statText}>{item._count?.favorites ?? 0}</Text>
                   </View>
                 </View>
+                <StarRating saleId={item.id} currentCount={item._count?.reviews ?? 0} />
               </View>
             </TouchableOpacity>
           );
