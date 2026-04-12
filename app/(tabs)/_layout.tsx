@@ -30,7 +30,7 @@ export default function TabLayout() {
       }} />
       <Tabs.Screen name="list" options={{
         tabBarIcon: ({ focused }) => (
-          <TabIcon icon="layers-outline" iconFocused="layers" label="Sales" focused={focused} />
+          <TabIcon icon="layers-outline" iconFocused="layers" label="List" focused={focused} />
         ),
       }} />
       <Tabs.Screen name="post" options={{

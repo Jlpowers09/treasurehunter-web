@@ -8,13 +8,19 @@ import { trpc } from '../../lib/trpc';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: string }[] = [
-  { type: 'YARD_SALE', label: 'Yard', icon: 'home-outline', color: '#FF385C' },
-  { type: 'ESTATE_SALE', label: 'Estate', icon: 'business-outline', color: '#7C3AED' },
-  { type: 'GARAGE_SALE', label: 'Garage', icon: 'car-outline', color: '#0EA5E9' },
-  { type: 'MOVING_SALE', label: 'Moving', icon: 'cube-outline', color: '#F59E0B' },
-  { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#10B981' },
-  { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#F97316' },
+const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: string; image: string }[] = [
+  { type: 'YARD_SALE', label: 'Yard', icon: 'home-outline', color: '#FF385C',
+    image: 'http://192.168.50.59:3000/public/categories/yard.jpg' },
+  { type: 'ESTATE_SALE', label: 'Estate', icon: 'business-outline', color: '#7C3AED',
+    image: 'http://192.168.50.59:3000/public/categories/estate.jpg' },
+  { type: 'GARAGE_SALE', label: 'Garage', icon: 'car-outline', color: '#0EA5E9',
+    image: 'http://192.168.50.59:3000/public/categories/garage.jpg' },
+  { type: 'MOVING_SALE', label: 'Moving', icon: 'cube-outline', color: '#F59E0B',
+    image: 'http://192.168.50.59:3000/public/categories/moving.jpg' },
+  { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#10B981',
+    image: 'http://192.168.50.59:3000/public/categories/thrift.jpg' },
+  { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#F97316',
+    image: 'http://192.168.50.59:3000/public/categories/flea.jpg' },
 ];
 
 const GOOGLE_MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? '';
@@ -273,18 +279,31 @@ export default function MapScreen() {
             return (
               <TouchableOpacity
                 key={cat.type}
-                style={[styles.categoryCard, isSelected && { borderColor: cat.color, borderWidth: 2 }]}
+                style={[styles.categoryCard, isSelected && { borderColor: cat.color, borderWidth: 2.5 }]}
                 onPress={() => setSelectedType(isSelected ? null : cat.type)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
-                <View style={[styles.categoryIconBox, { backgroundColor: isSelected ? cat.color : cat.color + '15' }]}>
-                  <Ionicons name={cat.icon} size={18} color={isSelected ? '#fff' : cat.color} />
-                </View>
-                <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '700' }]}>
-                  {cat.label}
-                </Text>
-                <View style={[styles.countBadge, { backgroundColor: isSelected ? cat.color : '#f0f0f0' }]}>
-                  <Text style={[styles.countText, { color: isSelected ? '#fff' : '#999' }]}>{count}</Text>
+                {Platform.OS === 'web' ? (
+                  <img
+                    src={cat.image}
+                    style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 10 }}
+                    alt={cat.label}
+                  />
+                ) : (
+                  <View style={[styles.categoryIconBox, { backgroundColor: cat.color + '20', width: '100%', height: 64, borderRadius: 10 }]}>
+                    <Ionicons name={cat.icon} size={24} color={cat.color} />
+                  </View>
+                )}
+                {isSelected && (
+                  <View style={[styles.categorySelectedOverlay, { borderColor: cat.color }]} />
+                )}
+                <View style={styles.categoryBottom}>
+                  <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
+                    {cat.label}
+                  </Text>
+                  <View style={[styles.countBadge, { backgroundColor: isSelected ? cat.color : '#f0f0f0' }]}>
+                    <Text style={[styles.countText, { color: isSelected ? '#fff' : '#999' }]}>{count}</Text>
+                  </View>
                 </View>
               </TouchableOpacity>
             );
@@ -521,13 +540,15 @@ const styles = StyleSheet.create({
   categoriesWrapper: { backgroundColor: '#fff', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
   categoriesScroll: { paddingHorizontal: 20, gap: 8 },
   categoryCard: {
-    alignItems: 'center', gap: 6, padding: 10, minWidth: 72,
+    width: 100, overflow: 'hidden',
     backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#f0f0f0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
   },
+  categorySelectedOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 2.5 },
   categoryIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  categoryLabel: { fontSize: 10, fontWeight: '600', color: '#666', textAlign: 'center' },
-  countBadge: { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1 },
+  categoryBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 6 },
+  categoryLabel: { fontSize: 10, fontWeight: '600', color: '#555' },
+  countBadge: { borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1 },
   countText: { fontSize: 10, fontWeight: '700' },
   mapArea: { flex: 1, position: 'relative' },
   mapPlaceholder: { flex: 1, backgroundColor: '#eef2ee', alignItems: 'center', justifyContent: 'center' },
