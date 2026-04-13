@@ -67,6 +67,18 @@ function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; c
   );
 }
 
+const getCategorySvg = (type: string, color: string) => {
+  const svgs: Record<string, string> = {
+    YARD_SALE: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    ESTATE_SALE: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 7l10-5 10 5"/></svg>`,
+    GARAGE_SALE: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+    MOVING_SALE: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+    THRIFT_STORE: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+    FLEA_MARKET: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"/><path d="M12 5v4"/><path d="M8 9V5"/><path d="M16 9V5"/></svg>`,
+  };
+  return svgs[type] ?? svgs['YARD_SALE'];
+};
+
 export default function MapScreen() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -326,33 +338,21 @@ export default function MapScreen() {
             return (
               <TouchableOpacity
                 key={cat.type}
-                style={[styles.categoryCard, isSelected && { borderColor: cat.color, borderWidth: 2.5 }]}
+                style={[styles.chip, isSelected && { backgroundColor: cat.color, borderColor: cat.color }]}
                 onPress={() => setSelectedType(isSelected ? null : cat.type)}
                 activeOpacity={0.8}
               >
                 {Platform.OS === 'web' ? (
-                  <img
-                    src={cat.image}
-                    style={{ width: '100%', height: 64, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
-                    alt={cat.label}
-                  />
+                  <div dangerouslySetInnerHTML={{ __html: getCategorySvg(cat.type, isSelected ? '#fff' : cat.color) }} style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
                 ) : (
-                  <View style={[styles.categoryIconBox, { backgroundColor: cat.color + '20', width: '100%', height: 64, borderRadius: 10 }]}>
-                    <Ionicons name={cat.icon} size={24} color={cat.color} />
+                  <Ionicons name={cat.icon} size={16} color={isSelected ? '#fff' : cat.color} />
+                )}
+                <Text style={[styles.chipLabel, isSelected && { color: '#fff' }]}>{cat.label}</Text>
+                {count > 0 && (
+                  <View style={[styles.chipBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : cat.color + '20' }]}>
+                    <Text style={[styles.chipBadgeText, { color: isSelected ? '#fff' : cat.color }]}>{count}</Text>
                   </View>
                 )}
-                {isSelected && (
-                  <View style={[styles.categorySelectedOverlay, { borderColor: cat.color }]} />
-                )}
-                <View style={{ height: 4, backgroundColor: cat.color, width: '100%', marginTop: 6 }} />
-                <View style={styles.categoryBottom}>
-                  <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
-                    {cat.label} Sales
-                  </Text>
-                  <View style={[styles.countBadge, { backgroundColor: isSelected ? cat.color : '#f0f0f0' }]}>
-                    <Text style={[styles.countText, { color: isSelected ? '#fff' : '#999' }]}>{count}</Text>
-                  </View>
-                </View>
               </TouchableOpacity>
             );
           })}
@@ -597,6 +597,18 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14, color: '#333' },
   categoriesWrapper: { backgroundColor: '#fff', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
   categoriesScroll: { paddingHorizontal: 20, gap: 8 },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 20, backgroundColor: '#fff',
+    borderWidth: 1.5, borderColor: '#e8e8e8',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 3, elevation: 1,
+    marginRight: 8,
+  },
+  chipLabel: { fontSize: 13, fontWeight: '600', color: '#444' },
+  chipBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
+  chipBadgeText: { fontSize: 11, fontWeight: '700' },
   categoryCard: {
     width: 100, overflow: 'hidden',
     backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#f0f0f0',
