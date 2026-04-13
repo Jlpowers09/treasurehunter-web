@@ -20,7 +20,7 @@ const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: stri
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/moving.jpg' },
   { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#27AE60',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/thrift.jpg' },
-  { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#8E44AD',
+  { type: 'FLEA_MARKET', label: 'Flea', icon: 'storefront-outline', color: '#8E44AD',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/flea.jpg' },
 ];
 
@@ -338,21 +338,32 @@ export default function MapScreen() {
             return (
               <TouchableOpacity
                 key={cat.type}
-                style={[styles.chip, isSelected && { backgroundColor: cat.color, borderColor: cat.color }]}
+                style={[styles.categoryCard, isSelected && { borderColor: cat.color, borderWidth: 2.5 }]}
                 onPress={() => setSelectedType(isSelected ? null : cat.type)}
                 activeOpacity={0.8}
               >
                 {Platform.OS === 'web' ? (
-                  <div dangerouslySetInnerHTML={{ __html: getCategorySvg(cat.type, isSelected ? '#fff' : cat.color) }} style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                  <img
+                    src={cat.image}
+                    style={{ width: '100%', height: 80, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                    alt={cat.label}
+                  />
                 ) : (
-                  <Ionicons name={cat.icon} size={16} color={isSelected ? '#fff' : cat.color} />
-                )}
-                <Text style={[styles.chipLabel, isSelected && { color: '#fff' }]}>{cat.label}</Text>
-                {count > 0 && (
-                  <View style={[styles.chipBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : cat.color + '20' }]}>
-                    <Text style={[styles.chipBadgeText, { color: isSelected ? '#fff' : cat.color }]}>{count}</Text>
+                  <View style={[styles.categoryIconBox, { backgroundColor: cat.color + '20', width: '100%', height: 80, borderTopLeftRadius: 10, borderTopRightRadius: 10 }]}>
+                    <Ionicons name={cat.icon} size={32} color={cat.color} />
                   </View>
                 )}
+                {isSelected && (
+                  <View style={[styles.categorySelectedOverlay, { borderColor: cat.color }]} />
+                )}
+                <View style={styles.categoryBottom}>
+                  <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
+                    {cat.label} {cat.type === 'THRIFT_STORE' ? 'Store' : cat.type === 'FLEA_MARKET' ? 'Market' : 'Sales'}
+                  </Text>
+                  <View style={[styles.countBadge, { backgroundColor: isSelected ? cat.color : '#f0f0f0' }]}>
+                    <Text style={[styles.countText, { color: isSelected ? '#fff' : '#999' }]}>{count}</Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -611,13 +622,12 @@ const styles = StyleSheet.create({
   chipBadgeText: { fontSize: 11, fontWeight: '700' },
   categoryCard: {
     width: 100, overflow: 'hidden',
-    backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#f0f0f0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    backgroundColor: 'transparent', borderRadius: 14,
   },
   categorySelectedOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 2.5 },
   categoryIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  categoryBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 6 },
-  categoryLabel: { fontSize: 10, fontWeight: '600', color: '#555' },
+  categoryBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, paddingVertical: 6, gap: 4 },
+  categoryLabel: { fontSize: 10, fontWeight: '600', color: '#555', textAlign: 'center' },
   countBadge: { borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1 },
   countText: { fontSize: 10, fontWeight: '700' },
   mapArea: { flex: 1, position: 'relative' },
