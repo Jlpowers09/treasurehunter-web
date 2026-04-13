@@ -10,17 +10,17 @@ type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: string; image: string }[] = [
   { type: 'YARD_SALE', label: 'Yard', icon: 'home-outline', color: '#FF385C',
-    image: 'http://192.168.50.59:3000/public/categories/yard.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/yard.jpg' },
   { type: 'ESTATE_SALE', label: 'Estate', icon: 'business-outline', color: '#7C3AED',
-    image: 'http://192.168.50.59:3000/public/categories/estate.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/estate.jpg' },
   { type: 'GARAGE_SALE', label: 'Garage', icon: 'car-outline', color: '#0EA5E9',
-    image: 'http://192.168.50.59:3000/public/categories/garage.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/garage.jpg' },
   { type: 'MOVING_SALE', label: 'Moving', icon: 'cube-outline', color: '#F59E0B',
-    image: 'http://192.168.50.59:3000/public/categories/moving.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/moving.jpg' },
   { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#10B981',
-    image: 'http://192.168.50.59:3000/public/categories/thrift.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/thrift.jpg' },
   { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#F97316',
-    image: 'http://192.168.50.59:3000/public/categories/flea.jpg' },
+    image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/flea.jpg' },
 ];
 
 const GOOGLE_MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? '';
