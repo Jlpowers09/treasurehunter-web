@@ -225,7 +225,7 @@ export default function PostScreen() {
                   onPress={() => setSaleType(t.type)}
                   activeOpacity={0.7}
                 >
-                  <img src={t.image} style={{ width: '100%', height: 120, objectFit: 'contain', borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: '#f9f9f9' }} alt={t.label} />
+                  <img src={t.image} style={{ width: '100%', height: 120, objectFit: 'contain', borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: '#ffffff' }} alt={t.label} />
                   <Text style={[styles.typeLabel, saleType === t.type && { color: t.color, fontWeight: '700' }]}>
                     {t.label}
                   </Text>

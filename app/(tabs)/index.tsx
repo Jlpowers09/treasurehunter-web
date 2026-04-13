@@ -345,7 +345,7 @@ export default function MapScreen() {
                 {Platform.OS === 'web' ? (
                   <img
                     src={cat.image}
-                    style={{ width: '100%', height: 80, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                    style={{ width: '100%', height: 100, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10, display: 'block' }}
                     alt={cat.label}
                   />
                 ) : (
@@ -621,8 +621,8 @@ const styles = StyleSheet.create({
   chipBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
   chipBadgeText: { fontSize: 11, fontWeight: '700' },
   categoryCard: {
-    width: 100, overflow: 'hidden',
-    backgroundColor: 'transparent', borderRadius: 14,
+    width: 110, overflow: 'hidden',
+    backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#f0f0f0',
   },
   categorySelectedOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 2.5 },
   categoryIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
