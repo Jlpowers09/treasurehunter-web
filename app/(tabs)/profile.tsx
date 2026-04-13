@@ -7,11 +7,11 @@ export default function ProfileScreen() {
   const { user } = useUser();
 
   const handleSignIn = () => {
-    Linking.openURL('https://nearby-sculpin-81.clerk.accounts.dev/sign-in?redirect_url=https://treasurehunter.jjgtpsevices.com');
+    Linking.openURL('https://accounts.jjgtpsevices.com/sign-in');
   };
 
   const handleSignUp = () => {
-    Linking.openURL('https://nearby-sculpin-81.clerk.accounts.dev/sign-up?redirect_url=https://treasurehunter.jjgtpsevices.com');
+    Linking.openURL('https://accounts.jjgtpsevices.com/sign-up');
   };
 
   if (isSignedIn && user) {

@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { trpc } from '../../lib/trpc';
+import { useAuth } from '@clerk/clerk-expo';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -71,6 +72,18 @@ const starStyles = StyleSheet.create({
 
 export default function ListScreen() {
   const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const { userId } = useAuth();
+  const toggleFavorite = trpc.sale.toggleFavorite.useMutation({
+    onSuccess: (data, vars) => {
+      setFavorites(prev => {
+        const next = new Set(prev);
+        if (data.favorited) next.add(vars.saleId);
+        else next.delete(vars.saleId);
+        return next;
+      });
+    },
+  });
   const [radiusMiles, setRadiusMiles] = useState(10);
   const [showRadiusSlider, setShowRadiusSlider] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
@@ -224,13 +237,24 @@ export default function ListScreen() {
                     currentCount={selectedSale._count?.reviews ?? 0}
                     avgRating={selectedSale.avgRating ?? 0}
                   />
-                  <TouchableOpacity style={styles.directionsBtn} onPress={() => {
-                    const addr = encodeURIComponent(`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.state}`);
-                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
-                  }}>
-                    <Ionicons name="navigate-outline" size={18} color="#fff" />
-                    <Text style={styles.directionsBtnText}>Get Directions</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                    <TouchableOpacity style={[styles.directionsBtn, { flex: 1 }]} onPress={() => {
+                      const addr = encodeURIComponent(`${selectedSale.address}, ${selectedSale.city}, ${selectedSale.state}`);
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
+                    }}>
+                      <Ionicons name="navigate-outline" size={18} color="#fff" />
+                      <Text style={styles.directionsBtnText}>Get Directions</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ width: 52, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: '#C0392B', alignItems: 'center', justifyContent: 'center' }}
+                      onPress={() => {
+                        if (!userId) { alert('Sign in to save sales'); return; }
+                        toggleFavorite.mutate({ saleId: selectedSale.id, clerkUserId: userId });
+                      }}
+                    >
+                      <Ionicons name={favorites.has(selectedSale.id) ? 'heart' : 'heart-outline'} size={22} color="#C0392B" />
+                    </TouchableOpacity>
+                  </View>
                 </ScrollView>
               );
             })()}

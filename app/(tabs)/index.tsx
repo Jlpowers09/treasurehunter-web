@@ -5,6 +5,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { trpc } from '../../lib/trpc';
+import { useAuth } from '@clerk/clerk-expo';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -70,6 +71,18 @@ export default function MapScreen() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const { userId } = useAuth();
+  const toggleFavorite = trpc.sale.toggleFavorite.useMutation({
+    onSuccess: (data, vars) => {
+      setFavorites(prev => {
+        const next = new Set(prev);
+        if (data.favorited) next.add(vars.saleId);
+        else next.delete(vars.saleId);
+        return next;
+      });
+    },
+  });
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
@@ -535,8 +548,18 @@ export default function MapScreen() {
                       <Ionicons name="navigate-outline" size={18} color="#fff" />
                       <Text style={styles.modalDirectionsText}>Get Directions</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.modalSaveBtn}>
-                      <Ionicons name="heart-outline" size={18} color="#C0392B" />
+                    <TouchableOpacity 
+                      style={styles.modalSaveBtn}
+                      onPress={() => {
+                        if (!userId) { alert('Sign in to save sales'); return; }
+                        if (selectedSale) toggleFavorite.mutate({ saleId: selectedSale.id, clerkUserId: userId });
+                      }}
+                    >
+                      <Ionicons 
+                        name={favorites.has(selectedSale?.id ?? '') ? 'heart' : 'heart-outline'} 
+                        size={18} 
+                        color="#C0392B" 
+                      />
                     </TouchableOpacity>
                   </View>
                 </>
