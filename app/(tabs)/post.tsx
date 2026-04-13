@@ -10,13 +10,13 @@ import { trpc } from '../../lib/trpc';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-const SALE_TYPES: { type: string; label: string; icon: IoniconsName; color: string }[] = [
-  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#C0392B' },
-  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#2A7F6F' },
-  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#5B9BD5' },
-  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#D4870A' },
-  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#27AE60' },
-  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#8E44AD' },
+const SALE_TYPES: { type: string; label: string; icon: IoniconsName; color: string; image: string }[] = [
+  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#C0392B', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/yard.jpg' },
+  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#2A7F6F', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/estate.jpg' },
+  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#5B9BD5', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/garage.jpg' },
+  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#D4870A', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/moving.jpg' },
+  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#27AE60', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/thrift.jpg' },
+  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#8E44AD', image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/flea.jpg' },
 ];
 
 function AddressAutocomplete({ onSelect }: { 
@@ -225,9 +225,7 @@ export default function PostScreen() {
                   onPress={() => setSaleType(t.type)}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.typeIconBox, { backgroundColor: saleType === t.type ? t.color : t.color + '15' }]}>
-                    <Ionicons name={t.icon} size={24} color={saleType === t.type ? '#fff' : t.color} />
-                  </View>
+                  <img src={t.image} style={{ width: '100%', height: 120, objectFit: 'contain', borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: '#f9f9f9' }} alt={t.label} />
                   <Text style={[styles.typeLabel, saleType === t.type && { color: t.color, fontWeight: '700' }]}>
                     {t.label}
                   </Text>
@@ -439,12 +437,12 @@ const styles = StyleSheet.create({
   stepSub: { fontSize: 14, color: '#999', marginBottom: 24, lineHeight: 20 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   typeCard: {
-    width: '47%', padding: 16, borderRadius: 16, backgroundColor: '#fff',
+    width: '47%', padding: 0, borderRadius: 16, backgroundColor: '#fff', overflow: 'hidden',
     borderWidth: 1, borderColor: '#f0f0f0', alignItems: 'center', gap: 8, position: 'relative',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   typeIconBox: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  typeLabel: { fontSize: 13, fontWeight: '600', color: '#555', textAlign: 'center' },
+  typeLabel: { fontSize: 13, fontWeight: '600', color: '#555', textAlign: 'center', paddingVertical: 8 },
   checkmark: { position: 'absolute', top: 8, right: 8 },
   fieldGroup: { marginBottom: 16 },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 8 },
