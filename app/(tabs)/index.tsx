@@ -141,16 +141,30 @@ export default function MapScreen() {
       fullscreenControl: false,
     });
     googleMapRef.current = map;
+    let scrapeTimeout: any = null;
+    let lastScrapedLat: number | null = null;
+    let lastScrapedLng: number | null = null;
     map.addListener('idle', () => {
       const center = map.getCenter();
       if (!center) return;
       const lat = center.lat();
       const lng = center.lng();
-      fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/scrape`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng }),
-      }).catch(() => {});
+      // Only scrape if moved more than ~5 miles from last scrape
+      if (lastScrapedLat && lastScrapedLng) {
+        const dlat = Math.abs(lat - lastScrapedLat);
+        const dlng = Math.abs(lng - lastScrapedLng);
+        if (dlat < 0.07 && dlng < 0.07) return;
+      }
+      if (scrapeTimeout) clearTimeout(scrapeTimeout);
+      scrapeTimeout = setTimeout(() => {
+        lastScrapedLat = lat;
+        lastScrapedLng = lng;
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/scrape`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lng }),
+        }).catch(() => {});
+      }, 2000);
     });
 
     let userDot: any = null;

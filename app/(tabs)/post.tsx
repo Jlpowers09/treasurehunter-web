@@ -3,6 +3,7 @@ import {
   TextInput, ScrollView, ActivityIndicator, Alert
 } from 'react-native';
 import { useState } from 'react';
+import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { trpc } from '../../lib/trpc';
 
@@ -10,12 +11,12 @@ import { trpc } from '../../lib/trpc';
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const SALE_TYPES: { type: string; label: string; icon: IoniconsName; color: string }[] = [
-  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#FF385C' },
-  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#7C3AED' },
-  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#0EA5E9' },
-  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#F59E0B' },
-  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#10B981' },
-  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#F97316' },
+  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#C0392B' },
+  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#2A7F6F' },
+  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#5B9BD5' },
+  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#D4870A' },
+  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#27AE60' },
+  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#8E44AD' },
 ];
 
 function AddressAutocomplete({ onSelect }: { 
@@ -75,7 +76,7 @@ function AddressAutocomplete({ onSelect }: {
               style={acStyles.item}
               onPress={() => selectPlace(s.place_id, s.description)}
             >
-              <Ionicons name="location-outline" size={14} color="#FF385C" />
+              <Ionicons name="location-outline" size={14} color="#C0392B" />
               <Text style={acStyles.itemText} numberOfLines={1}>{s.description}</Text>
             </TouchableOpacity>
           ))}
@@ -118,6 +119,7 @@ export default function PostScreen() {
   const [endTime, setEndTime] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const { isSignedIn } = useAuth();
   const createSale = trpc.sale.create.useMutation({
     onSuccess: () => setSuccess(true),
     onError: (err: any) => Alert.alert('Error', err.message),
@@ -159,13 +161,30 @@ export default function PostScreen() {
     setZip(''); setStartDate(''); setEndDate(''); setStartTime(''); setEndTime('');
   };
 
+  if (!isSignedIn) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Post a Sale</Text>
+        </View>
+        <View style={styles.successBody}>
+          <View style={[styles.successIcon, { backgroundColor: '#C0392B15' }]}>
+            <Ionicons name="lock-closed-outline" size={48} color="#C0392B" />
+          </View>
+          <Text style={styles.successTitle}>Sign In Required</Text>
+          <Text style={styles.successSub}>You need to be signed in to post a sale. Head to the Profile tab to sign in.</Text>
+        </View>
+      </View>
+    );
+  }
+
   if (success) {
     return (
       <View style={styles.container}>
         <View style={styles.header}><Text style={styles.title}>Post a Sale</Text></View>
         <View style={styles.successBody}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={64} color="#10B981" />
+            <Ionicons name="checkmark-circle" size={64} color="#27AE60" />
           </View>
           <Text style={styles.successTitle}>Sale Posted!</Text>
           <Text style={styles.successSub}>Your sale is now live and visible to treasure hunters nearby.</Text>
@@ -344,7 +363,7 @@ export default function PostScreen() {
             <View style={styles.summary}>
               <Text style={styles.summaryTitle}>Summary</Text>
               <View style={styles.summaryRow}>
-                <Ionicons name={selectedType?.icon ?? 'pricetag-outline'} size={16} color={selectedType?.color ?? '#FF385C'} />
+                <Ionicons name={selectedType?.icon ?? 'pricetag-outline'} size={16} color={selectedType?.color ?? '#C0392B'} />
                 <Text style={styles.summaryText}>{selectedType?.label}</Text>
               </View>
               <View style={styles.summaryRow}>
@@ -361,6 +380,12 @@ export default function PostScreen() {
                 <Ionicons name="location-outline" size={16} color="#999" />
                 <Text style={styles.summaryText}>{address}, {city}, {state} {zip}</Text>
               </View>
+              {startDate ? (
+                <View style={styles.summaryRow}>
+                  <Ionicons name="calendar-outline" size={16} color="#999" />
+                  <Text style={styles.summaryText}>{startDate}{endDate && endDate !== startDate ? ` → ${endDate}` : ''}{startTime ? ` · ${startTime}` : ''}{endTime ? ` - ${endTime}` : ''}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         )}
@@ -407,7 +432,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: '800', color: '#111', letterSpacing: -0.5 },
   stepLabel: { fontSize: 13, color: '#999', fontWeight: '500' },
   progressBar: { height: 3, backgroundColor: '#f0f0f0' },
-  progressFill: { height: 3, backgroundColor: '#FF385C', borderRadius: 2 },
+  progressFill: { height: 3, backgroundColor: '#C0392B', borderRadius: 2 },
   body: { flex: 1 },
   stepContent: { padding: 20 },
   stepTitle: { fontSize: 22, fontWeight: '800', color: '#111', marginBottom: 6 },
@@ -438,13 +463,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f5f5f5',
   },
   btn: {
-    backgroundColor: '#FF385C', borderRadius: 14, paddingVertical: 16,
+    backgroundColor: '#C0392B', borderRadius: 14, paddingVertical: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   successBody: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  successIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#10B98115', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  successIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#27AE6015', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   successTitle: { fontSize: 24, fontWeight: '800', color: '#111' },
   successSub: { fontSize: 14, color: '#999', textAlign: 'center', marginTop: 8, lineHeight: 20, marginBottom: 8 },
 });
