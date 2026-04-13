@@ -141,6 +141,17 @@ export default function MapScreen() {
       fullscreenControl: false,
     });
     googleMapRef.current = map;
+    map.addListener('idle', () => {
+      const center = map.getCenter();
+      if (!center) return;
+      const lat = center.lat();
+      const lng = center.lng();
+      fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng }),
+      }).catch(() => {});
+    });
 
     let userDot: any = null;
     const placeUserDot = (lat: number, lng: number) => {
