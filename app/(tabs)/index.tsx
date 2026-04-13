@@ -9,17 +9,17 @@ import { trpc } from '../../lib/trpc';
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: string; image: string }[] = [
-  { type: 'YARD_SALE', label: 'Yard', icon: 'home-outline', color: '#FF385C',
+  { type: 'YARD_SALE', label: 'Yard', icon: 'home-outline', color: '#C0392B',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/yard.jpg' },
-  { type: 'ESTATE_SALE', label: 'Estate', icon: 'business-outline', color: '#7C3AED',
+  { type: 'ESTATE_SALE', label: 'Estate', icon: 'business-outline', color: '#2A7F6F',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/estate.jpg' },
-  { type: 'GARAGE_SALE', label: 'Garage', icon: 'car-outline', color: '#0EA5E9',
+  { type: 'GARAGE_SALE', label: 'Garage', icon: 'car-outline', color: '#5B9BD5',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/garage.jpg' },
-  { type: 'MOVING_SALE', label: 'Moving', icon: 'cube-outline', color: '#F59E0B',
+  { type: 'MOVING_SALE', label: 'Moving', icon: 'cube-outline', color: '#D4870A',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/moving.jpg' },
-  { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#10B981',
+  { type: 'THRIFT_STORE', label: 'Thrift', icon: 'shirt-outline', color: '#27AE60',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/thrift.jpg' },
-  { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#F97316',
+  { type: 'FLEA_MARKET', label: 'Flea Mkt', icon: 'storefront-outline', color: '#8E44AD',
     image: 'https://api.treasurehunter.jjgtpsevices.com/public/categories/flea.jpg' },
 ];
 
@@ -53,13 +53,13 @@ function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; c
             <Ionicons
               name={(userRating || hovered) >= star ? 'star' : avgRating >= star ? 'star' : avgRating >= star - 0.5 ? 'star-half' : 'star-outline'}
               size={20}
-              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#F59E0B' : '#ddd'}
+              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#D4870A' : '#ddd'}
             />
           </TouchableOpacity>
         ))}
       </View>
       {submitted
-        ? <Text style={{ fontSize: 12, color: '#10B981', fontWeight: '700' }}>Thanks!</Text>
+        ? <Text style={{ fontSize: 12, color: '#27AE60', fontWeight: '700' }}>Thanks!</Text>
         : <Text style={{ fontSize: 12, color: '#999' }}>{currentCount > 0 ? `${avgRating} · ${currentCount} review${currentCount !== 1 ? 's' : ''}` : 'Tap to rate'}</Text>
       }
     </View>
@@ -225,7 +225,7 @@ export default function MapScreen() {
         title: sale.title,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          fillColor: cat?.color ?? '#FF385C',
+          fillColor: cat?.color ?? '#C0392B',
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 2,
@@ -327,7 +327,7 @@ export default function MapScreen() {
 
         {!mapLoaded && Platform.OS === 'web' && (
           <View style={styles.mapLoading}>
-            <ActivityIndicator color="#FF385C" />
+            <ActivityIndicator color="#C0392B" />
             <Text style={styles.mapLoadingText}>Loading map...</Text>
           </View>
         )}
@@ -335,7 +335,7 @@ export default function MapScreen() {
         {showRadiusSlider && (
           <View style={styles.radiusPanel}>
             <View style={styles.radiusRow}>
-              <Ionicons name="radio-outline" size={16} color="#FF385C" />
+              <Ionicons name="radio-outline" size={16} color="#C0392B" />
               <Text style={styles.radiusLabel}>Radius: <Text style={styles.radiusValue}>{radiusMiles} mi</Text></Text>
               <TouchableOpacity onPress={() => setShowRadiusSlider(false)}>
                 <Ionicons name="close" size={16} color="#999" />
@@ -357,7 +357,7 @@ export default function MapScreen() {
         {/* Map controls */}
         <View style={styles.mapControls}>
           <TouchableOpacity style={styles.mapControlBtn} onPress={() => setShowRadiusSlider(p => !p)}>
-            <Ionicons name="radio-outline" size={20} color={showRadiusSlider ? '#FF385C' : '#333'} />
+            <Ionicons name="radio-outline" size={20} color={showRadiusSlider ? '#C0392B' : '#333'} />
           </TouchableOpacity>
           <View style={{ height: 8 }} />
           <TouchableOpacity style={styles.mapControlBtn} onPress={() => {
@@ -390,7 +390,7 @@ export default function MapScreen() {
       {drawerOpen && (
         <View style={styles.drawer}>
           {isLoading ? (
-            <ActivityIndicator color="#FF385C" style={{ marginTop: 20 }} />
+            <ActivityIndicator color="#C0392B" style={{ marginTop: 20 }} />
           ) : filtered?.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="search-outline" size={40} color="#ddd" />
@@ -412,8 +412,8 @@ export default function MapScreen() {
                     onPress={() => setSelectedSale(sale)}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.saleIconBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
-                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#FF385C'} />
+                    <View style={[styles.saleIconBox, { backgroundColor: (cat?.color ?? '#C0392B') + '15' }]}>
+                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#C0392B'} />
                     </View>
                     <View style={styles.saleRowInfo}>
                       <Text style={styles.saleRowTitle} numberOfLines={1}>{sale.title}</Text>
@@ -423,8 +423,8 @@ export default function MapScreen() {
                         <Text style={styles.saleRowDate}>
                           {new Date(sale.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </Text>
-                        <View style={[styles.typePill, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
-                          <Text style={[styles.typePillText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                        <View style={[styles.typePill, { backgroundColor: (cat?.color ?? '#C0392B') + '15' }]}>
+                          <Text style={[styles.typePillText, { color: cat?.color ?? '#C0392B' }]}>{cat?.label}</Text>
                         </View>
                       </View>
                       {(sale._count?.reviews ?? 0) > 0 && (
@@ -434,7 +434,7 @@ export default function MapScreen() {
                               key={star}
                               name="star"
                               size={10}
-                              color={star <= Math.round((sale.avgRating ?? 0)) ? '#F59E0B' : '#e0e0e0'}
+                              color={star <= Math.round((sale.avgRating ?? 0)) ? '#D4870A' : '#e0e0e0'}
                             />
                           ))}
                           <Text style={styles.saleRowReviewCount}>({sale._count.reviews})</Text>
@@ -461,9 +461,9 @@ export default function MapScreen() {
               return (
                 <>
                   <View style={styles.modalHeader}>
-                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
-                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#FF385C'} />
-                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#C0392B') + '15' }]}>
+                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={20} color={cat?.color ?? '#C0392B'} />
+                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#C0392B' }]}>{cat?.label}</Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedSale(null)} style={styles.modalCloseBtn}>
                       <Ionicons name="close" size={20} color="#666" />
@@ -477,12 +477,12 @@ export default function MapScreen() {
                   )}
 
                   <View style={styles.modalInfoRow}>
-                    <Ionicons name="location-outline" size={16} color="#FF385C" />
+                    <Ionicons name="location-outline" size={16} color="#C0392B" />
                     <Text style={styles.modalInfoText}>{selectedSale.address}, {selectedSale.city}, {selectedSale.state} {selectedSale.zip}</Text>
                   </View>
 
                   <View style={styles.modalInfoRow}>
-                    <Ionicons name="calendar-outline" size={16} color="#FF385C" />
+                    <Ionicons name="calendar-outline" size={16} color="#C0392B" />
                     <Text style={styles.modalInfoText}>
                       {new Date(selectedSale.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
                       {' — '}
@@ -492,7 +492,7 @@ export default function MapScreen() {
 
                   {selectedSale.startTime && (
                     <View style={styles.modalInfoRow}>
-                      <Ionicons name="time-outline" size={16} color="#FF385C" />
+                      <Ionicons name="time-outline" size={16} color="#C0392B" />
                       <Text style={styles.modalInfoText}>{selectedSale.startTime} — {selectedSale.endTime}</Text>
                     </View>
                   )}
@@ -511,7 +511,7 @@ export default function MapScreen() {
                       <Text style={styles.modalDirectionsText}>Get Directions</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.modalSaveBtn}>
-                      <Ionicons name="heart-outline" size={18} color="#FF385C" />
+                      <Ionicons name="heart-outline" size={18} color="#C0392B" />
                     </TouchableOpacity>
                   </View>
                 </>
@@ -573,8 +573,8 @@ const styles = StyleSheet.create({
   drawer: { backgroundColor: '#fff', maxHeight: 260, borderTopWidth: 1, borderTopColor: '#f5f5f5' },
   emptyState: { alignItems: 'center', paddingVertical: 24 },
   emptyText: { fontSize: 16, fontWeight: '700', color: '#333', marginTop: 12 },
-  clearFilterBtn: { marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#FF385C15', borderRadius: 20 },
-  clearFilterText: { fontSize: 13, color: '#FF385C', fontWeight: '600' },
+  clearFilterBtn: { marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#C0392B15', borderRadius: 20 },
+  clearFilterText: { fontSize: 13, color: '#C0392B', fontWeight: '600' },
   saleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f8f8f8' },
   saleIconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   saleRowInfo: { flex: 1 },
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   modalInfoText: { fontSize: 14, color: '#444', flex: 1, lineHeight: 20 },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
   modalDirectionsBtn: {
-    flex: 1, backgroundColor: '#FF385C', borderRadius: 14, paddingVertical: 14,
+    flex: 1, backgroundColor: '#C0392B', borderRadius: 14, paddingVertical: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   modalDirectionsText: { color: '#fff', fontSize: 15, fontWeight: '700' },
@@ -617,13 +617,13 @@ const styles = StyleSheet.create({
   },
   radiusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   radiusLabel: { flex: 1, fontSize: 13, color: '#555', fontWeight: '600' },
-  radiusValue: { color: '#FF385C', fontWeight: '800' },
+  radiusValue: { color: '#C0392B', fontWeight: '800' },
   sliderTrack: { flexDirection: 'row', justifyContent: 'space-between' },
   sliderTick: {
     flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8,
     backgroundColor: '#f5f5f5', marginHorizontal: 3,
   },
-  sliderTickActive: { backgroundColor: '#FF385C' },
+  sliderTickActive: { backgroundColor: '#C0392B' },
   sliderTickText: { fontSize: 12, fontWeight: '700', color: '#999' },
   sliderTickTextActive: { color: '#fff' },
   modalSaveBtn: {

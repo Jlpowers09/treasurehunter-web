@@ -6,12 +6,12 @@ import { trpc } from '../../lib/trpc';
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const CATEGORIES: { type: string; label: string; icon: IoniconsName; color: string }[] = [
-  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#FF385C' },
-  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#7C3AED' },
-  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#0EA5E9' },
-  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#F59E0B' },
-  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#10B981' },
-  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#F97316' },
+  { type: 'YARD_SALE', label: 'Yard Sale', icon: 'home-outline', color: '#C0392B' },
+  { type: 'ESTATE_SALE', label: 'Estate Sale', icon: 'business-outline', color: '#2A7F6F' },
+  { type: 'GARAGE_SALE', label: 'Garage Sale', icon: 'car-outline', color: '#5B9BD5' },
+  { type: 'MOVING_SALE', label: 'Moving Sale', icon: 'cube-outline', color: '#D4870A' },
+  { type: 'THRIFT_STORE', label: 'Thrift Store', icon: 'shirt-outline', color: '#27AE60' },
+  { type: 'FLEA_MARKET', label: 'Flea Market', icon: 'storefront-outline', color: '#8E44AD' },
 ];
 
 function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; currentCount: number; avgRating?: number }) {
@@ -47,7 +47,7 @@ function StarRating({ saleId, currentCount, avgRating = 0 }: { saleId: string; c
             <Ionicons
               name={(userRating || hovered) >= star ? 'star' : avgRating >= star ? 'star' : avgRating >= star - 0.5 ? 'star-half' : 'star-outline'}
               size={18}
-              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#F59E0B' : '#ddd'}
+              color={(userRating || hovered) >= star || avgRating >= star - 0.4 ? '#D4870A' : '#ddd'}
             />
           </TouchableOpacity>
         ))}
@@ -66,7 +66,7 @@ const starStyles = StyleSheet.create({
   container: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   stars: { flexDirection: 'row', gap: 2 },
   count: { fontSize: 11, color: '#bbb' },
-  thanks: { fontSize: 11, color: '#10B981', fontWeight: '700' },
+  thanks: { fontSize: 11, color: '#27AE60', fontWeight: '700' },
 });
 
 export default function ListScreen() {
@@ -99,7 +99,7 @@ export default function ListScreen() {
   });
 
   if (isLoading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color="#FF385C" /></View>;
+    return <View style={styles.centered}><ActivityIndicator size="large" color="#C0392B" /></View>;
   }
 
   return (
@@ -110,8 +110,8 @@ export default function ListScreen() {
           <Text style={styles.subtitle}>{filtered?.length ?? 0} found</Text>
         </View>
         <TouchableOpacity onPress={() => setShowRadiusSlider(p => !p)} style={styles.radiusBtn}>
-          <Ionicons name="radio-outline" size={18} color={showRadiusSlider ? '#FF385C' : '#555'} />
-          <Text style={[styles.radiusBtnText, showRadiusSlider && { color: '#FF385C' }]}>{radiusMiles} mi</Text>
+          <Ionicons name="radio-outline" size={18} color={showRadiusSlider ? '#C0392B' : '#555'} />
+          <Text style={[styles.radiusBtnText, showRadiusSlider && { color: '#C0392B' }]}>{radiusMiles} mi</Text>
         </TouchableOpacity>
       </View>
       {showRadiusSlider && (
@@ -146,12 +146,12 @@ export default function ListScreen() {
           const cat = CATEGORIES.find(c => c.type === item.type);
           return (
             <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => setSelectedSale(item)}>
-              <View style={[styles.typeBar, { backgroundColor: cat?.color ?? '#FF385C' }]} />
+              <View style={[styles.typeBar, { backgroundColor: cat?.color ?? '#C0392B' }]} />
               <View style={styles.cardContent}>
                 <View style={styles.cardTop}>
-                  <View style={[styles.typeBadge, { backgroundColor: (cat?.color ?? '#FF385C') + '20' }]}>
-                    <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={12} color={cat?.color ?? '#FF385C'} />
-                    <Text style={[styles.typeText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                  <View style={[styles.typeBadge, { backgroundColor: (cat?.color ?? '#C0392B') + '20' }]}>
+                    <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={12} color={cat?.color ?? '#C0392B'} />
+                    <Text style={[styles.typeText, { color: cat?.color ?? '#C0392B' }]}>{cat?.label}</Text>
                   </View>
                   <Text style={styles.dateText}>
                     {new Date(item.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -191,9 +191,9 @@ export default function ListScreen() {
               return (
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <View style={styles.modalHeader}>
-                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#FF385C') + '15' }]}>
-                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={18} color={cat?.color ?? '#FF385C'} />
-                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#FF385C' }]}>{cat?.label}</Text>
+                    <View style={[styles.modalTypeBox, { backgroundColor: (cat?.color ?? '#C0392B') + '15' }]}>
+                      <Ionicons name={cat?.icon ?? 'pricetag-outline'} size={18} color={cat?.color ?? '#C0392B'} />
+                      <Text style={[styles.modalTypeText, { color: cat?.color ?? '#C0392B' }]}>{cat?.label}</Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedSale(null)} style={styles.modalCloseBtn}>
                       <Ionicons name="close" size={20} color="#666" />
@@ -202,11 +202,11 @@ export default function ListScreen() {
                   <Text style={styles.modalTitle}>{selectedSale.title}</Text>
                   {selectedSale.description ? <Text style={styles.modalDesc}>{selectedSale.description}</Text> : null}
                   <View style={styles.modalRow}>
-                    <Ionicons name="location-outline" size={15} color="#FF385C" />
+                    <Ionicons name="location-outline" size={15} color="#C0392B" />
                     <Text style={styles.modalRowText}>{selectedSale.address}, {selectedSale.city}, {selectedSale.state} {selectedSale.zip}</Text>
                   </View>
                   <View style={styles.modalRow}>
-                    <Ionicons name="calendar-outline" size={15} color="#FF385C" />
+                    <Ionicons name="calendar-outline" size={15} color="#C0392B" />
                     <Text style={styles.modalRowText}>
                       {new Date(selectedSale.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
                       {' — '}
@@ -215,7 +215,7 @@ export default function ListScreen() {
                   </View>
                   {selectedSale.startTime && (
                     <View style={styles.modalRow}>
-                      <Ionicons name="time-outline" size={15} color="#FF385C" />
+                      <Ionicons name="time-outline" size={15} color="#C0392B" />
                       <Text style={styles.modalRowText}>{selectedSale.startTime} — {selectedSale.endTime}</Text>
                     </View>
                   )}
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   radiusPanel: { backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   sliderTrack: { flexDirection: 'row', justifyContent: 'space-between' },
   sliderTick: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  sliderTickActive: { backgroundColor: '#FF385C' },
+  sliderTickActive: { backgroundColor: '#C0392B' },
   sliderTickText: { fontSize: 13, fontWeight: '600', color: '#aaa' },
   sliderTickTextActive: { color: '#fff' },
   subtitle: { fontSize: 14, color: '#999', marginTop: 2 },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   modalDesc: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 12 },
   modalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
   modalRowText: { fontSize: 14, color: '#444', flex: 1, lineHeight: 20 },
-  directionsBtn: { backgroundColor: '#FF385C', borderRadius: 14, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  directionsBtn: { backgroundColor: '#C0392B', borderRadius: 14, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
   directionsBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   empty: { alignItems: 'center', paddingTop: 80 },
   emptyText: { fontSize: 18, fontWeight: '700', color: '#999', marginTop: 16 },

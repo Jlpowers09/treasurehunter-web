@@ -23,7 +23,7 @@ export default function ProfileScreen() {
         <View style={styles.body}>
           <View style={styles.avatarCircle}>
             {user.imageUrl ? (
-              <Ionicons name="person" size={48} color="#FF385C" />
+              <Ionicons name="person" size={48} color="#C0392B" />
             ) : (
               <Ionicons name="person-outline" size={48} color="#ccc" />
             )}
@@ -47,7 +47,7 @@ export default function ProfileScreen() {
             </View>
           </View>
           <TouchableOpacity style={styles.signOutBtn} onPress={() => signOut()}>
-            <Ionicons name="log-out-outline" size={18} color="#FF385C" />
+            <Ionicons name="log-out-outline" size={18} color="#C0392B" />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 2 },
   statDivider: { width: 1, backgroundColor: '#f0f0f0' },
   signInBtn: {
-    marginTop: 24, backgroundColor: '#FF385C', borderRadius: 14,
+    marginTop: 24, backgroundColor: '#C0392B', borderRadius: 14,
     paddingVertical: 14, paddingHorizontal: 40, width: '100%', alignItems: 'center',
   },
   signInText: { color: '#fff', fontSize: 15, fontWeight: '700' },
@@ -107,6 +107,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 40, width: '100%', alignItems: 'center',
   },
   signUpText: { color: '#333', fontSize: 15, fontWeight: '600' },
-  signOutBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 32, padding: 14, borderWidth: 1.5, borderColor: '#FF385C', borderRadius: 14, width: '100%', justifyContent: 'center' },
-  signOutText: { color: '#FF385C', fontSize: 15, fontWeight: '700' },
+  signOutBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 32, padding: 14, borderWidth: 1.5, borderColor: '#C0392B', borderRadius: 14, width: '100%', justifyContent: 'center' },
+  signOutText: { color: '#C0392B', fontSize: 15, fontWeight: '700' },
 });
