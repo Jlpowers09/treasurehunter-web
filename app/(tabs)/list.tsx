@@ -74,6 +74,15 @@ export default function ListScreen() {
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { userId } = useAuth();
+  const { data: existingFavorites } = trpc.sale.getFavorites.useQuery(
+    { clerkUserId: userId ?? '' },
+    { enabled: !!userId }
+  );
+  useEffect(() => {
+    if (existingFavorites) {
+      setFavorites(new Set(existingFavorites.map((f: any) => f.id)));
+    }
+  }, [existingFavorites]);
   const toggleFavorite = trpc.sale.toggleFavorite.useMutation({
     onSuccess: (data, vars) => {
       setFavorites(prev => {

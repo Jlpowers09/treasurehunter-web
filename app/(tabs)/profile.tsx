@@ -1,9 +1,15 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { trpc } from '../../lib/trpc';
 
 export default function ProfileScreen() {
   const { isSignedIn, signOut } = useAuth();
+  const { userId } = useAuth();
+  const { data: favorites } = trpc.sale.getFavorites.useQuery(
+    { clerkUserId: userId ?? '' },
+    { enabled: !!userId }
+  );
   const { user } = useUser();
 
   const handleSignIn = () => {

@@ -73,6 +73,16 @@ export default function MapScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { userId } = useAuth();
+  const { data: existingFavorites } = trpc.sale.getFavorites.useQuery(
+    { clerkUserId: userId ?? '' },
+    { enabled: !!userId }
+  );
+  // Load existing favorites into state
+  useEffect(() => {
+    if (existingFavorites) {
+      setFavorites(new Set(existingFavorites.map((f: any) => f.id)));
+    }
+  }, [existingFavorites]);
   const toggleFavorite = trpc.sale.toggleFavorite.useMutation({
     onSuccess: (data, vars) => {
       setFavorites(prev => {
