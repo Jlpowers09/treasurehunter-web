@@ -296,7 +296,7 @@ export default function MapScreen() {
                 {isSelected && (
                   <View style={[styles.categorySelectedOverlay, { borderColor: cat.color }]} />
                 )}
-                <View style={{ height: 4, backgroundColor: cat.color, width: '100%' }} />
+                <View style={{ height: 4, backgroundColor: cat.color, width: '100%', marginTop: 6 }} />
                 <View style={styles.categoryBottom}>
                   <Text style={[styles.categoryLabel, isSelected && { color: cat.color, fontWeight: '800' }]}>
                     {cat.label} Sales

@@ -9,7 +9,7 @@ function TabIcon({ icon, iconFocused, label, focused }: {
 }) {
   return (
     <View style={styles.tabItem}>
-      <Ionicons name={focused ? iconFocused : icon} size={24} color={focused ? '#FF385C' : '#9CA3AF'} />
+      <Ionicons name={focused ? iconFocused : icon} size={24} color={focused ? '#C0392B' : '#9CA3AF'} />
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
     </View>
   );
@@ -68,13 +68,13 @@ const styles = StyleSheet.create({
   tabBarItem: { paddingVertical: 4 },
   tabItem: { alignItems: 'center', justifyContent: 'center', gap: 3 },
   tabLabel: { fontSize: 10, fontWeight: '500', color: '#9CA3AF', letterSpacing: 0.2 },
-  tabLabelFocused: { color: '#FF385C', fontWeight: '600' },
+  tabLabelFocused: { color: '#C0392B', fontWeight: '600' },
   postBtnWrapper: { alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: -14 },
   postBtn: {
-    width: 52, height: 52, borderRadius: 26, backgroundColor: '#FF385C',
+    width: 52, height: 52, borderRadius: 26, backgroundColor: '#C0392B',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#FF385C', shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#C0392B', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35, shadowRadius: 10, elevation: 8,
   },
-  postLabel: { fontSize: 10, fontWeight: '600', color: '#FF385C' },
+  postLabel: { fontSize: 10, fontWeight: '600', color: '#C0392B' },
 });
