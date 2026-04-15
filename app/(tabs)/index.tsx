@@ -180,21 +180,26 @@ export default function MapScreen() {
     let scrapeTimeout: any = null;
     let lastScrapedLat: number | null = null;
     let lastScrapedLng: number | null = null;
+    let lastScrapeTime: number = 0;
     map.addListener('idle', () => {
       const center = map.getCenter();
       if (!center) return;
       const lat = center.lat();
       const lng = center.lng();
-      // Only scrape if moved more than ~5 miles from last scrape
+      const now = Date.now();
+      // Only scrape if moved more than ~20 miles from last scrape
       if (lastScrapedLat && lastScrapedLng) {
         const dlat = Math.abs(lat - lastScrapedLat);
         const dlng = Math.abs(lng - lastScrapedLng);
-        if (dlat < 0.07 && dlng < 0.07) return;
+        if (dlat < 0.3 && dlng < 0.3) return;
       }
+      // Don't scrape more than once per 6 hours per session
+      if (now - lastScrapeTime < 6 * 60 * 60 * 1000 && lastScrapedLat) return;
       if (scrapeTimeout) clearTimeout(scrapeTimeout);
       scrapeTimeout = setTimeout(() => {
         lastScrapedLat = lat;
         lastScrapedLng = lng;
+        lastScrapeTime = Date.now();
         setIsScrapingArea(true);
         fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/scrape`, {
           method: 'POST',
@@ -203,7 +208,7 @@ export default function MapScreen() {
         }).then(() => {
           setTimeout(() => setIsScrapingArea(false), 120000);
         }).catch(() => setIsScrapingArea(false));
-      }, 2000);
+      }, 3000);
     });
 
     let userDot: any = null;
@@ -390,8 +395,10 @@ export default function MapScreen() {
 
         {!mapLoaded && Platform.OS === 'web' && (
           <View style={styles.mapLoading}>
-            <ActivityIndicator color="#C0392B" />
-            <Text style={styles.mapLoadingText}>Loading map...</Text>
+            <Image source={require('../../assets/images/logo.png')} style={{ width: 180, height: 48, resizeMode: 'contain', marginBottom: 16 }} />
+            <ActivityIndicator size="large" color="#C0392B" />
+            <Text style={styles.mapLoadingText}>{!mapLoaded ? 'Loading map...' : 'Finding sales near you...'}</Text>
+            <Text style={{ fontSize: 11, color: '#bbb', marginTop: 6 }}>This may take a moment in new areas</Text>
           </View>
         )}
         {/* Scraping indicator */}
