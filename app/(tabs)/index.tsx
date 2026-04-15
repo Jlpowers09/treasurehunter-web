@@ -191,7 +191,7 @@ export default function MapScreen() {
       if (lastScrapedLat && lastScrapedLng) {
         const dlat = Math.abs(lat - lastScrapedLat);
         const dlng = Math.abs(lng - lastScrapedLng);
-        if (dlat < 0.3 && dlng < 0.3) return;
+        if (dlat < 0.8 && dlng < 0.8) return;
       }
       // Don't scrape more than once per 6 hours per session
       if (now - lastScrapeTime < 6 * 60 * 60 * 1000 && lastScrapedLat) return;
@@ -354,7 +354,7 @@ export default function MapScreen() {
                 {Platform.OS === 'web' ? (
                   <img
                     src={cat.image}
-                    style={{ width: '100%', height: 100, objectFit: 'cover', borderTopLeftRadius: 10, borderTopRightRadius: 10, display: 'block' }}
+                    style={{ width: '90%', height: 90, objectFit: 'contain', borderRadius: 10, display: 'block', margin: '0 auto' }}
                     alt={cat.label}
                   />
                 ) : (
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   chipBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
   chipBadgeText: { fontSize: 11, fontWeight: '700' },
   categoryCard: {
-    width: 110, overflow: 'hidden',
+    width: 110, overflow: 'hidden', paddingTop: 8,
     backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#f0f0f0',
   },
   categorySelectedOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 2.5 },
