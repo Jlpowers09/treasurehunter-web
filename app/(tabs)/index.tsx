@@ -110,6 +110,7 @@ export default function MapScreen() {
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [radiusMiles, setRadiusMiles] = useState(10);
   const [showRadiusSlider, setShowRadiusSlider] = useState(false);
+  const [isScrapingArea, setIsScrapingArea] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -194,11 +195,14 @@ export default function MapScreen() {
       scrapeTimeout = setTimeout(() => {
         lastScrapedLat = lat;
         lastScrapedLng = lng;
+        setIsScrapingArea(true);
         fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/scrape`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lat, lng }),
-        }).catch(() => {});
+        }).then(() => {
+          setTimeout(() => setIsScrapingArea(false), 120000);
+        }).catch(() => setIsScrapingArea(false));
       }, 2000);
     });
 
@@ -388,6 +392,13 @@ export default function MapScreen() {
           <View style={styles.mapLoading}>
             <ActivityIndicator color="#C0392B" />
             <Text style={styles.mapLoadingText}>Loading map...</Text>
+          </View>
+        )}
+        {/* Scraping indicator */}
+        {isScrapingArea && (
+          <View style={{ position: 'absolute', top: 12, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 }}>
+            <ActivityIndicator size="small" color="#F5A623" />
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Searching for sales nearby...</Text>
           </View>
         )}
         {/* Radius slider panel */}
